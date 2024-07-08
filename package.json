@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/schang9m/tinyapp/issues"
   },
-  "homepage": "https://github.com/schang9m/tinyapp#readme"
+  "homepage": "https://github.com/schang9m/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
 }
