@@ -33,6 +33,7 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
+  res.redirect(`/urls`);
 });
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -43,6 +44,12 @@ app.post("/urls/:id/delete", (req, res) => {
   // }
   delete urlDatabase[id];
   res.redirect("/urls")
+})
+
+app.post("/urls/:id", (req, res) => {
+  const newURL = req.body.longURL;//get the longURL
+  urlDatabase[req.params.id] = newURL;
+  res.redirect(`/urls`)
 })
 
 app.get("/urls/:id", (req, res) => {
