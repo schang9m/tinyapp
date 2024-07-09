@@ -35,16 +35,21 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  //check edge case
+  // if (!urlDatabase.hasOwnProperty(id)) {
+  //   res.send("this doesn't exist!")
+  // }
+  delete urlDatabase[id];
+  res.redirect("/urls")
+})
+
 app.get("/urls/:id", (req, res) => {
   const templateVars = {id: req.params.id, longURL: urlDatabase[req.params.id]};
   res.render("urls_show", templateVars)
 })
 
-app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id;
-  delete urlDatabase[id];
-  res.redirect("/urls")
-})
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
