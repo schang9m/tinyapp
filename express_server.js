@@ -30,6 +30,9 @@ const generateRandomString = function() {
 }
 app.post("/login", (req, res) => {
   const name = req.body.username;
+  if(!name) {
+    return res.send("Please enter your username");
+  }
   res.cookie('username', name);
   res.redirect(`/urls`)
 })
@@ -102,3 +105,8 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id]
   res.redirect(longURL);
 });
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
+  res.redirect(`/urls`);
+})
