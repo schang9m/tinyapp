@@ -150,7 +150,7 @@ app.post("/login", (req, res) => {
   if (userExist) {
     if(users[userExist].password === enterUser.password){
       res.cookie('user_id', userExist)
-      res.redirect("/urls");
+      return res.redirect("/urls");
     }
   }
   res.status(400).send('E-mail or password are wrong!');
