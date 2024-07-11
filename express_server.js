@@ -160,7 +160,7 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("session");
+  delete req.session.user_id;
   res.redirect(`/login`);
 })
 
