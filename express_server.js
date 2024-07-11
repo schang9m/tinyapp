@@ -10,12 +10,6 @@ app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 app.use(cookieParser());
 
-// Set res.locals.username for all routes
-// app.use((req, res, next) => {
-//   res.locals.username = req.cookies["username"];
-//   next();
-// });
-
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -115,7 +109,7 @@ app.get("/u/:id", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
-  res.redirect(`/urls`);
+  res.redirect(`/login`);
 })
 
 app.get("/register", (req, res) => {
@@ -152,9 +146,7 @@ app.get("/login", (req, res) => {
 
 app.post("/login", (req, res) => {
   const enterUser = req.body
-  console.log(enterUser)
   const userExist = userFinder(enterUser.email, users);
-  console.log("userExist", userExist)
   if (userExist) {
     if(users[userExist].password === enterUser.password){
       res.cookie('user_id', userExist)
