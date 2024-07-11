@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser')
+const userFinder = require('./helper/helper')
+
 
 app.use(express.urlencoded({ extended: true }));
 
@@ -132,8 +134,15 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const newUser = req.body
   const id = generateRandomString();
-  users[id] = {id, email: newUser.email, password: newUser.password}
-  console.log(users);
-  res.cookie('user_id', id);
+  const userExist = userFinder(newUser.email, users);
+  if (userExist) {
+    return res.status(400).send('E-mail already exist!')
+  }
+  if (newUser.email && newUser.password) {
+    users[id] = {id, email: newUser.email, password: newUser.password}
+    res.cookie('user_id', id);
+  } else {
+    res.status(400).send('E-mail or password are empty!')
+  }
   res.redirect("/urls")
 })
