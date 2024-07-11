@@ -3,13 +3,20 @@ const app = express();
 const cookieParser = require('cookie-parser')
 const {userFinder, urlsForUser, checkUrl} = require('./helper/helper')
 const dotenv = require("dotenv");
+var cookieSession = require('cookie-session')
 dotenv.config();
 const port = process.env.PORT; // default port 8080
 
 app.use(express.urlencoded({ extended: true }));
 
 app.set("view engine", "ejs");
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: [process.env.SESSION_KEY1, process.env.SESSION_KEY2],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}))
 const bcrypt = require("bcryptjs");
 const salt = bcrypt.genSaltSync(10);
 
@@ -53,22 +60,23 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const id = req.cookies.user_id
+  const id = req.session.user_id
   const templateVars = {
-    user: users[req.cookies.user_id], // Corrected typo
+    user: users[id], // Corrected typo
     urls: urlsForUser(id, urlDatabase)
   }
-  if (!users[req.cookies.user_id]) {
+  if (!users[id]) {
     return res.send("Please Login or Register first")
   }
     res.render("urls_index", templateVars)
 });
 
 app.get("/urls/new", (req, res) => {
+  const id = req.session.user_id
   const templateVars = {
-    user: users[req.cookies.user_id],
+    user: users[id],
   }
-  if (!users[req.cookies.user_id]){
+  if (!users[id]){
     return res.redirect("/login")
   }
   res.render("urls_new", templateVars);
@@ -76,7 +84,7 @@ app.get("/urls/new", (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
   const shortUrl = req.params.id;
-  const id = req.cookies.user_id
+  const id = req.session.user_id
   const userUrl = urlsForUser(id, urlDatabase);
   checkUrl(shortUrl, id, userUrl, urlDatabase);
   //check edge case
@@ -89,7 +97,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 app.post("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
-  const id = req.cookies.user_id
+  const id = req.session.user_id
   const userUrl = urlsForUser(id, urlDatabase);
   checkUrl(shortUrl, id, userUrl, urlDatabase);
   const newURL = req.body.longURL;//get the longURL
@@ -99,20 +107,21 @@ app.post("/urls/:id", (req, res) => {
 
 app.post("/urls", (req, res) => {
   // console.log(req.body); // Log the POST request body to the console
-  if (!users[req.cookies.user_id]){
+  const id = req.session.user_id
+  if (!users[id]){
     return res.send("You need to be signin")
   };
-  const id = generateRandomString();
-  console.log(req.body.longURL)
-  urlDatabase[id] = {
+  const dbId = generateRandomString();
+  // console.log(req.body.longURL)
+  urlDatabase[dbId] = {
     longURL: req.body.longURL,
-    userID: req.cookies.user_id 
+    userID: id
   };  
-  res.redirect(`/urls/${id}`); // Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/${dbId}`); // Respond with 'Ok' (we will replace this)
 });
 
 app.get("/urls/:id", (req, res) => {
-  const id = req.cookies.user_id
+  const id = req.session.user_id
   const shortUrl = req.params.id;
   if (!urlDatabase[shortUrl]){
     return res.send("This url doesn't exist!");
@@ -152,12 +161,12 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  res.clearCookie("session");
   res.redirect(`/login`);
 })
 
 app.get("/register", (req, res) => {
-  if (users[req.cookies.user_id]){
+  if (users[req.session.user_id]){
     res.redirect("/urls")
   }
   res.render("register")//,{user:undefined})
@@ -175,7 +184,7 @@ app.post("/register", (req, res) => {
     
     // Respond first before setting the cookie
     // res.status(200).send('Registration successful!').end(() => {
-      res.cookie('user_id', id);
+      req.session.user_id = users[id].id;
       res.redirect("/urls");
       // });
     } else {
@@ -184,7 +193,7 @@ app.post("/register", (req, res) => {
   });
   
   app.get("/login", (req, res) => {
-    if (users[req.cookies.user_id]){
+    if (users[req.session.user_id]){
       res.redirect("/urls")
     }
     res.render("login")
@@ -195,7 +204,7 @@ app.post("/register", (req, res) => {
     const userExist = userFinder(enterUser.email, users);
     if (userExist) {
       if (bcrypt.compareSync(enterUser.password, users[userExist].password)){
-        res.cookie('user_id', userExist)
+        req.session.user_id = users[userExist].id;
         return res.redirect("/urls");
       }
     }
