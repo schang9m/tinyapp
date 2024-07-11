@@ -1,9 +1,8 @@
 const express = require("express");
 const app = express();
-const cookieParser = require('cookie-parser')
 const {userFinder, urlsForUser, checkUrl} = require('./helper/helper')
 const dotenv = require("dotenv");
-var cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session')
 dotenv.config();
 const port = process.env.PORT; // default port 8080
 
