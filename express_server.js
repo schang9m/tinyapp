@@ -52,7 +52,10 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    user: users[req.cookies.user_id], // Corrected typo
+    user: users[req.cookies.user_id],
+  }
+  if (!users[req.cookies.user_id]){
+    return res.redirect("/login")
   }
   res.render("urls_new", templateVars);
 });
@@ -68,6 +71,18 @@ app.post("/urls/:id/delete", (req, res) => {
 })
 
 app.post("/urls/:id", (req, res) => {
+  if (!users[req.cookies.user_id]){
+    return res.send("You need to be signin")
+  }  
+  const newURL = req.body.longURL;//get the longURL
+  urlDatabase[req.params.id] = newURL;
+  res.redirect(`/urls`)
+})
+
+app.post("/urls", (req, res) => {
+  if (!users[req.cookies.user_id]){
+    return res.send("You need to be signin")
+  }  
   const newURL = req.body.longURL;//get the longURL
   urlDatabase[req.params.id] = newURL;
   res.redirect(`/urls`)
@@ -103,6 +118,9 @@ app.post("/urls", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   // const longURL = ...
+  if (!urlDatabase[req.params.id]) {
+    res.send("Id doesn't exist!");
+  } 
   const longURL = urlDatabase[req.params.id]
   res.redirect(longURL);
 });
@@ -113,8 +131,11 @@ app.post("/logout", (req, res) => {
 })
 
 app.get("/register", (req, res) => {
-
-  res.render("register", {user:undefined})//,{user:undefined})
+  console.log(users[req.cookies.user_id])
+  if (users[req.cookies.user_id]){
+    res.redirect("/urls")
+  }
+  res.render("register")//,{user:undefined})
 })
 
 app.post("/register", (req, res) => {
@@ -138,10 +159,10 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  const templateVars = {
-    user: users[req.cookies.user_id]
+  if (users[req.cookies.user_id]){
+    res.redirect("/urls")
   }
-    res.render("login", templateVars)
+    res.render("login")
 })
 
 app.post("/login", (req, res) => {
