@@ -31,4 +31,24 @@ const checkUrl = (shortUrl, id, userUrl, database) => {
   }
 }
 
-module.exports = {userFinder, urlsForUser, checkUrl};
+const getUserByEmail = function(email, database) {
+  // lookup magic...
+  let user;
+  for (let id in database) {
+    if (database[id].email === email) {
+      user = database[id];
+    }
+  }
+  return user;
+};
+const generateRandomString = function() {
+  let result = "";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length; // 62
+  for (let i = 0; i < 6; i++) {
+    result += characters.charAt(Math.random() * charactersLength);
+  }
+  return result;
+}
+
+module.exports = {userFinder, urlsForUser, checkUrl, getUserByEmail, generateRandomString};
