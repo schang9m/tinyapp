@@ -9,5 +9,14 @@ const userFinder = (email, users) => {
   return null;
 }
 
+const urlsForUser = (id, data) => {
+  let userUrl = {};
+  for (let key in data) {
+    if (data[key].userID === id) {
+      userUrl[key] = data[key];
+    }
+  }
+  return userUrl
+}
 
-module.exports = userFinder;
+module.exports = {userFinder, urlsForUser};
