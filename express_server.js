@@ -1,27 +1,31 @@
 const express = require("express");
 const app = express();
-const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser')
 const {userFinder, urlsForUser, checkUrl} = require('./helper/helper')
-
+const dotenv = require("dotenv");
+dotenv.config();
+const port = process.env.PORT; // default port 8080
 
 app.use(express.urlencoded({ extended: true }));
 
 app.set("view engine", "ejs");
 app.use(cookieParser());
+const bcrypt = require("bcryptjs");
+const salt = bcrypt.genSaltSync(10);
 
 const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
   },
   aJ48lW: {
     id: "aJ48lW",
     email: "schang9m@163.com",
-    password: "qwe123",
   },
 };
+//hash the password 
+users["userRandomID"].password = bcrypt.hashSync(process.env.USER1_PASSWORD, salt);
+users["aJ48lW"].password = bcrypt.hashSync(process.env.USER2_PASSWORD, salt);
 
 const urlDatabase = {
   b6UTxQ: {
@@ -128,9 +132,6 @@ app.get("/urls/:id", (req, res) => {
 })
 
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
@@ -170,33 +171,37 @@ app.post("/register", (req, res) => {
     return res.status(400).send('E-mail already exist!')
   }
   if (newUser.email && newUser.password) {
-    users[id] = { id, email: newUser.email, password: newUser.password };
-
+    users[id] = { id, email: newUser.email, password: bcrypt.hashSync(newUser.password, salt) };
+    
     // Respond first before setting the cookie
     // res.status(200).send('Registration successful!').end(() => {
       res.cookie('user_id', id);
       res.redirect("/urls");
-    // });
-  } else {
-    res.status(400).send('E-mail or password are empty!');
-  }
-});
-
-app.get("/login", (req, res) => {
-  if (users[req.cookies.user_id]){
-    res.redirect("/urls")
-  }
-    res.render("login")
-})
-
-app.post("/login", (req, res) => {
-  const enterUser = req.body
-  const userExist = userFinder(enterUser.email, users);
-  if (userExist) {
-    if(users[userExist].password === enterUser.password){
-      res.cookie('user_id', userExist)
-      return res.redirect("/urls");
+      // });
+    } else {
+      res.status(400).send('E-mail or password are empty!');
     }
-  }
-  res.status(400).send('E-mail or password are wrong!');
-});
+  });
+  
+  app.get("/login", (req, res) => {
+    if (users[req.cookies.user_id]){
+      res.redirect("/urls")
+    }
+    res.render("login")
+  })
+  
+  app.post("/login", (req, res) => {
+    const enterUser = req.body
+    const userExist = userFinder(enterUser.email, users);
+    if (userExist) {
+      if (bcrypt.compareSync(enterUser.password, users[userExist].password)){
+        res.cookie('user_id', userExist)
+        return res.redirect("/urls");
+      }
+    }
+    res.status(400).send('E-mail or password are wrong!');
+  });
+  
+  app.listen(port, () => {
+    console.log(`Example app listening on port ${port}!`);
+  });
