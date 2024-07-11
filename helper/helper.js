@@ -11,12 +11,24 @@ const userFinder = (email, users) => {
 
 const urlsForUser = (id, data) => {
   let userUrl = {};
-  for (let key in data) {
-    if (data[key].userID === id) {
-      userUrl[key] = data[key];
+  for (let shorUrl in data) {
+    if (data[shorUrl].userID === id) {
+      userUrl[shorUrl] = data[shorUrl];
     }
   }
   return userUrl
 }
 
-module.exports = {userFinder, urlsForUser};
+const checkUrl = (shortUrl, id, userUrl, database) => {
+  if (!database[shortUrl]){
+    return res.send("This url doesn't exist!");
+  }
+  if (!id){
+    return res.send("You need to be signin");
+  }
+  if (!userUrl[shortUrl]) {
+    return res.send("You don't own the url!");
+  }
+}
+
+module.exports = {userFinder, urlsForUser, checkUrl};

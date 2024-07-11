@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser')
-const {userFinder, urlsForUser} = require('./helper/helper')
+const {userFinder, urlsForUser, checkUrl} = require('./helper/helper')
 
 
 app.use(express.urlencoded({ extended: true }));
@@ -74,15 +74,7 @@ app.post("/urls/:id/delete", (req, res) => {
   const shortUrl = req.params.id;
   const id = req.cookies.user_id
   const userUrl = urlsForUser(id, urlDatabase);
-  if (!urlDatabase[shortUrl]){
-    return res.send("This url doesn't exist!");
-  }
-  if (!id){
-    return res.send("You need to be signin");
-  }
-  if (!userUrl[shortUrl]) {
-    return res.send("You don't own the url!");
-  }
+  checkUrl(shortUrl, id, userUrl, urlDatabase);
   //check edge case
   // if (!urlDatabase.hasOwnProperty(id)) {
   //   res.send("this doesn't exist!")
@@ -95,15 +87,7 @@ app.post("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
   const id = req.cookies.user_id
   const userUrl = urlsForUser(id, urlDatabase);
-  if (!urlDatabase[shortUrl]){
-    return res.send("This url doesn't exist!");
-  }
-  if (!id){
-    return res.send("You need to be signin");
-  }
-  if (!userUrl[shortUrl]) {
-    return res.send("You don't own the url!");
-  }
+  checkUrl(shortUrl, id, userUrl, urlDatabase);
   const newURL = req.body.longURL;//get the longURL
   urlDatabase[req.params.id].longURL = newURL;
   res.redirect(`/urls`)
@@ -115,7 +99,11 @@ app.post("/urls", (req, res) => {
     return res.send("You need to be signin")
   };
   const id = generateRandomString();
-  urlDatabase[id].longURL = req.body.longURL
+  console.log(req.body.longURL)
+  urlDatabase[id] = {
+    longURL: req.body.longURL,
+    userID: req.cookies.user_id 
+  };  
   res.redirect(`/urls/${id}`); // Respond with 'Ok' (we will replace this)
 });
 
