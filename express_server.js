@@ -43,14 +43,6 @@ const generateRandomString = function() {
   }
   return result;
 }
-app.post("/login", (req, res) => {
-  // const name = req.body.username;
-  // if(!name) {
-  //   return res.send("Please enter your username");
-  // }
-  // res.cookie('user_id', name);
-  res.redirect(`/urls`)
-})
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -128,7 +120,7 @@ app.post("/logout", (req, res) => {
 
 app.get("/register", (req, res) => {
 
-  res.render("register")//,{user:undefined})
+  res.render("register", {user:undefined})//,{user:undefined})
 })
 
 app.post("/register", (req, res) => {
@@ -139,10 +131,35 @@ app.post("/register", (req, res) => {
     return res.status(400).send('E-mail already exist!')
   }
   if (newUser.email && newUser.password) {
-    users[id] = {id, email: newUser.email, password: newUser.password}
-    res.cookie('user_id', id);
+    users[id] = { id, email: newUser.email, password: newUser.password };
+
+    // Respond first before setting the cookie
+    // res.status(200).send('Registration successful!').end(() => {
+      res.cookie('user_id', id);
+      res.redirect("/urls");
+    // });
   } else {
-    res.status(400).send('E-mail or password are empty!')
+    res.status(400).send('E-mail or password are empty!');
   }
-  res.redirect("/urls")
+});
+
+app.get("/login", (req, res) => {
+  const templateVars = {
+    user: users[req.cookies.user_id]
+  }
+    res.render("login", templateVars)
 })
+
+app.post("/login", (req, res) => {
+  const enterUser = req.body
+  console.log(enterUser)
+  const userExist = userFinder(enterUser.email, users);
+  console.log("userExist", userExist)
+  if (userExist) {
+    if(users[userExist].password === enterUser.password){
+      res.cookie('user_id', userExist)
+      res.redirect("/urls");
+    }
+  }
+  res.status(400).send('E-mail or password are wrong!');
+});

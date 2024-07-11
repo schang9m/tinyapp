@@ -22,9 +22,11 @@
             <button type="submit">Logout</button>
           </form>
         <% } else { %>
-          <form action="/login" method="POST">
-            <input name = "username" placeholder="username"/>
-            <button type="submit">Login</button>
+          <form action="/login" method="GET">
+            <button type="login">Login</button>
+          </form>
+          <form action="/register" method="GET">
+            <button type="register">register</button>
           </form>
         <% } %>
       </nav>
