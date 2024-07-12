@@ -3,12 +3,17 @@ const app = express();
 const {userFinder, urlsForUser, checkUrl, getUserByEmail, generateRandomString} = require('./helper/helper');
 const dotenv = require("dotenv");
 const cookieSession = require('cookie-session');
+const methodOverride = require('method-override')
+
+//import the datas
 const users = require('./data/users');
 const urlDatabase = require("./data/urlDatabase");
+
 dotenv.config();
 const port = process.env.PORT; // default port 8080
 
 app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride('_method'))
 
 app.set("view engine", "ejs");
 app.use(cookieSession({
@@ -26,19 +31,19 @@ const salt = bcrypt.genSaltSync(10);
 users["userRandomID"].password = bcrypt.hashSync(process.env.USER1_PASSWORD, salt);
 users["aJ48lW"].password = bcrypt.hashSync(process.env.USER2_PASSWORD, salt);
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
 app.get("/urls", (req, res) => {
   const id = req.session.user_id;
+  urlDatabase.counter++
+  if (!users[id]) {
+    req.session.error = "Login first!"
+    return res.redirect("/login")
+  }
   const templateVars = {
     user: users[id], // Corrected typo
-    urls: urlsForUser(id, urlDatabase)
+    urls: urlsForUser(id, urlDatabase),
+    error: req.session.error
   };
-  if (!users[id]) {
-    return res.send("Please Login or Register first");
-  }
+  delete req.session.error;
   res.render("urls_index", templateVars);
 });
 
@@ -46,31 +51,38 @@ app.get("/urls/new", (req, res) => {
   const id = req.session.user_id;
   const templateVars = {
     user: users[id],
+    error: req.session.error
   };
   if (!users[id]) {
+    req.session.error = "Login first!"
     return res.redirect("/login");
   }
   res.render("urls_new", templateVars);
 });
 
-app.post("/urls/:id/delete", (req, res) => {
+app.delete("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
   const id = req.session.user_id;
   const userUrl = urlsForUser(id, urlDatabase);
-  checkUrl(shortUrl, id, userUrl, urlDatabase);
-  //check edge case
-  // if (!urlDatabase.hasOwnProperty(id)) {
-  //   res.send("this doesn't exist!")
-  // }
+
+  const {error, url} = checkUrl(shortUrl, id, userUrl, urlDatabase);
+  if (error) {
+    req.session.error= error;
+    return res.redirect("/urls")
+  }
   delete urlDatabase[shortUrl];
   res.redirect("/urls");
 });
 
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   const shortUrl = req.params.id;
   const id = req.session.user_id;
   const userUrl = urlsForUser(id, urlDatabase);
-  checkUrl(shortUrl, id, userUrl, urlDatabase);
+  const {error, url} = checkUrl(shortUrl, id, userUrl, urlDatabase);
+  if (error) {
+    req.session.error= error;
+    return res.redirect("/urls")
+  }
   const newURL = req.body.longURL;//get the longURL
   urlDatabase[req.params.id].longURL = newURL;
   res.redirect(`/urls`);
@@ -80,7 +92,8 @@ app.post("/urls", (req, res) => {
   // console.log(req.body); // Log the POST request body to the console
   const id = req.session.user_id;
   if (!users[id]) {
-    return res.send("You need to be signin");
+    req.session.error = "Login first!"
+    return res.redirect("/login")
   }
   let dbId = generateRandomString();
   // console.log(req.body.longURL)
@@ -94,20 +107,20 @@ app.post("/urls", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const id = req.session.user_id;
   const shortUrl = req.params.id;
-  if (!urlDatabase[shortUrl]) {
-    return res.send("This url doesn't exist!");
-  }
-  if (!id) {
-    return res.send("You need to login!");
-  }
   const userUrl = urlsForUser(id, urlDatabase);
-  if (!userUrl[shortUrl]) {
-    return res.send("You don't own the url!");
+  const {error, url} = checkUrl(shortUrl, id, userUrl, urlDatabase);
+  if (error) {
+    req.session.error= error;
+    return res.redirect("/login")
   }
+  userUrl[shortUrl].counter++;
   const templateVars = {
     user: users[id],
     id: req.params.id,
-    longURL: userUrl[shortUrl].longURL};
+    longURL: userUrl[shortUrl].longURL,
+    counter: userUrl[shortUrl].counter
+  };
+
   res.render("urls_show", templateVars);
 });
 
@@ -167,7 +180,9 @@ app.get("/login", (req, res) => {
   if (users[req.session.user_id]) {
     res.redirect("/urls");
   }
-  res.render("login");
+  const templateVars = {error: req.session.error}
+  delete req.session.error;
+  res.render("login",templateVars);
 });
   
 app.post("/login", (req, res) => {
@@ -179,7 +194,8 @@ app.post("/login", (req, res) => {
       return res.redirect("/urls");
     }
   }
-  res.status(400).send('E-mail or password are wrong!');
+  req.session.error = "Invalid Email/Password!!"
+  return res.redirect("/login")
 });
   
 app.listen(port, () => {

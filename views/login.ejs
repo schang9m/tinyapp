@@ -15,7 +15,12 @@
 </head>
 <body>
   <%- include('partials/_header', {user:undefined}) %>
-
+  <% if(error){ %>
+    <section class="alert bg-danger text-white text-center" role="alert">
+      <h1>ERROR</h1>
+      <p><%= error %></p>
+    </section>
+  <% } %>
   <main style="margin: 1em;">
     <h3>Login Your Account</h3>
     <form action="/login" method="POST">

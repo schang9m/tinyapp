@@ -17,6 +17,12 @@
     <title>TinyApp</title>
   </head>
   <body>
+    <% if(error){ %>
+      <section class="alert bg-danger text-white text-center" role="alert">
+        <h1>ERROR</h1>
+        <p><%= error %></p>
+      </section>
+    <% } %>
     <main style="margin: 1em;">
       <%- include('partials/_header') %>
       <h3>My URLs</h3>
@@ -34,7 +40,7 @@
             <tr>
               <td><a href='/urls/<%= id %>'><%= id %></a></td>
               <td><%= urls[id].longURL %></td>
-              <td><form method="POST" action="/urls/<%= id %>/delete">
+              <td><form method="POST" action="/urls/<%= id %>?_method=DELETE">
                 <button type="submit" class="btn btn-primary">Delete</button>
               </form></td>
               <td><a href='/urls/<%= id %>'>Edit</a></td>

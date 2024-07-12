@@ -21,14 +21,15 @@ const urlsForUser = (id, data) => {
 
 const checkUrl = (shortUrl, id, userUrl, database) => {
   if (!database[shortUrl]){
-    return res.send("This url doesn't exist!");
+    return {error: "This url doesn't exist!", url:null};
   }
   if (!id){
-    return res.send("You need to be signin");
+    return {error: "You need to sign in!", url:null};
   }
   if (!userUrl[shortUrl]) {
-    return res.send("You don't own the url!");
+    return {error: "You don't own the url!", url:null};
   }
+  return {error: null, url:true}
 }
 
 const getUserByEmail = function(email, database) {

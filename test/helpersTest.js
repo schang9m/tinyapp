@@ -28,3 +28,59 @@ describe('getUserByEmail', function() {
     // Write your assert statement here
   });
 });
+
+const { urlsForUser } = require('../helper/helper');
+
+describe('urlsForUser', function() {
+  it('should return URLs that belong to the specified user', function() {
+    const urlDatabase = {
+      "shortURL1": { longURL: "https://www.example1.com", userID: "user1" },
+      "shortURL2": { longURL: "https://www.example2.com", userID: "user2" },
+      "shortURL3": { longURL: "https://www.example3.com", userID: "user1" }
+    };
+
+    const userId = "user1";
+    const expectedURLs = {
+      "shortURL1": { longURL: "https://www.example1.com", userID: "user1" },
+      "shortURL3": { longURL: "https://www.example3.com", userID: "user1" }
+    };
+
+    const result = urlsForUser(userId, urlDatabase);
+
+    assert.deepEqual(result, expectedURLs);
+  });
+
+  it('should return an empty object if no URLs belong to the specified user', function() {
+    const urlDatabase = {
+      "shortURL1": { longURL: "https://www.example1.com", userID: "user2" },
+      "shortURL2": { longURL: "https://www.example2.com", userID: "user3" }
+    };
+
+    const userId = "user1";
+    const result = urlsForUser(userId, urlDatabase);
+
+    assert.deepEqual(result, {});
+  });
+
+  it('should return an empty object if the urlDatabase is empty', function() {
+    const urlDatabase = {};
+    const userId = "user1";
+    const result = urlsForUser(userId, urlDatabase);
+
+    assert.deepEqual(result, {});
+  });
+
+  it('should not return any URLs that do not belong to the specified user', function() {
+    const urlDatabase = {
+      "shortURL1": { longURL: "https://www.example1.com", userID: "user1" },
+      "shortURL2": { longURL: "https://www.example2.com", userID: "user2" },
+      "shortURL3": { longURL: "https://www.example3.com", userID: "user1" }
+    };
+
+    const userId = "user1";
+    const result = urlsForUser(userId, urlDatabase);
+
+    // Check that no URL belonging to another user is included in the result
+    assert.notProperty(result, "shortURL2");
+  });
+});

@@ -21,11 +21,12 @@
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
         <h4 class="card-title">Edit</h4>
-        <form method="POST" action="/urls/<%= id %>">
+        <form method="POST" action="/urls/<%= id %>?_method=PUT">
           <label>New URL:</label>
           <input name = "longURL" value="<%= longURL %>" />
           <button type="submit" class="btn btn-primary">Update</button>
         </form>
+        <h5 class="card-title">Visits: <%= counter %></h5>
       </div>
       <div class="card-footer text-muted"></div>
     </div>
