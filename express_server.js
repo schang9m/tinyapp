@@ -85,6 +85,7 @@ app.put("/urls/:id", (req, res) => {
   }
   const newURL = req.body.longURL;//get the longURL
   urlDatabase[req.params.id].longURL = newURL;
+  urlDatabase[shortUrl].counter = 0;
   res.redirect(`/urls`);
 });
 
@@ -99,7 +100,8 @@ app.post("/urls", (req, res) => {
   // console.log(req.body.longURL)
   urlDatabase[dbId] = {
     longURL: req.body.longURL,
-    userID: id
+    userID: id,
+    counter: 0
   };
   res.redirect(`/urls/${dbId}`); // Respond with 'Ok' (we will replace this)
 });
@@ -113,7 +115,6 @@ app.get("/urls/:id", (req, res) => {
     req.session.error= error;
     return res.redirect("/login")
   }
-  userUrl[shortUrl].counter++;
   const templateVars = {
     user: users[id],
     id: req.params.id,
@@ -130,17 +131,16 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
 
 app.get("/u/:id", (req, res) => {
   // const longURL = ...
-  if (!urlDatabase[req.params.id]) {
-    res.send("Id doesn't exist!");
+  const shortUrl = req.params.id;
+  if (!urlDatabase[shortUrl]) {
+    req.session.error = "Url doesn't exist!";
+    return res.redirect("/login");
   }
   const longURL = urlDatabase[req.params.id].longURL;
+  urlDatabase[shortUrl].counter++;
   res.redirect(longURL);
 });
 
