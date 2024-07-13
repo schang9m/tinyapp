@@ -184,6 +184,15 @@ app.get("/login", (req, res) => {
   delete req.session.error;
   res.render("login",templateVars);
 });
+
+app.get("", (req, res) => {
+  if (users[req.session.user_id]) {
+    res.redirect("/urls");
+  }
+  const templateVars = {error: req.session.error}
+  delete req.session.error;
+  res.render("login",templateVars);
+});
   
 app.post("/login", (req, res) => {
   const enterUser = req.body;
